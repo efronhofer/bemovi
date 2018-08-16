@@ -39,7 +39,7 @@ create_overlays <- function(traj.data, to.data, merged.data.folder, raw.video.fo
     j <- 1
     
     if (type == "traj") {
-      while (j <= max(traj.data$frame)) {
+      while (j <= max(traj.data_tmp$frame)) {
         jpeg(paste(to.data, temp.overlay.folder, file_names[i], "/", "frame_", j, ".jpg", sep = ""), width = as.numeric(width), height = as.numeric(height), quality = 100)
         par(mar = rep(0, 4), xaxs = c("i"), yaxs = c("i"))
         
@@ -79,7 +79,7 @@ create_overlays <- function(traj.data, to.data, merged.data.folder, raw.video.fo
     }
     
     if (type == "label") {
-      while (j <= max(traj.data$frame)) {
+      while (j <= max(traj.data_tmp$frame)) {
         jpeg(paste(to.data, temp.overlay.folder, file_names[i], "/", "frame_", 
                    j, ".jpg", sep = ""), width = as.numeric(width), height = as.numeric(height), quality = 100)
         par(mar = rep(0, 4), xaxs = c("i"), yaxs = c("i"))
