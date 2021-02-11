@@ -4,9 +4,16 @@
 \alias{summarize_populations}
 \title{Function to calculate densities and summarize morphology and movement at the population (sample) level}
 \usage{
-summarize_populations(traj.data, sum.data, write = FALSE, to.data,
-  merged.data.folder, video.description.folder, video.description.file,
-  total_frames)
+summarize_populations(
+  traj.data,
+  sum.data,
+  write = FALSE,
+  to.data,
+  merged.data.folder,
+  video.description.folder,
+  video.description.file,
+  total_frames
+)
 }
 \arguments{
 \item{traj.data}{dataframe with the information on morphology and movement for each frame (either "trajectoty.data" or "trajectory.data.filtered")}

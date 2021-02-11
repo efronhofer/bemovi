@@ -4,10 +4,22 @@
 \alias{create_overlays}
 \title{Function to create a new video with the extracted trajectories (filtered or raw) overlayed onto the original video}
 \usage{
-create_overlays(traj.data, to.data, merged.data.folder, raw.video.folder,
-  temp.overlay.folder, overlay.folder, width, height, difference.lag,
-  type = "traj", predict_spec = F, contrast.enhancement = 0, IJ.path,
-  memory = 512)
+create_overlays(
+  traj.data,
+  to.data,
+  merged.data.folder,
+  raw.video.folder,
+  temp.overlay.folder,
+  overlay.folder,
+  width,
+  height,
+  difference.lag,
+  type = "traj",
+  predict_spec = F,
+  contrast.enhancement = 0,
+  IJ.path,
+  memory = 512
+)
 }
 \arguments{
 \item{traj.data}{dataframe with the information on morphology and movement for each frame (either "trajectoty.data" or "traj.data.filtered")}
