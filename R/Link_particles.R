@@ -38,6 +38,12 @@ link_particles <- function(to.data, particle.data.folder, trajectory.data.folder
   no_cores <- detectCores()
   max_linker_processes <- min(c(mem_ratio, no_cores - 1))
   
+  # vector for saving all PIDs for parallellisation
+  all_pids <- numeric()
+  
+  # counter variable for pids
+  pid_cnt <- 0
+  
   for (j in start_vid:length(all.files)) {
     
     PA_data <- read.table(paste0(PA_output_dir, "/", all.files[j]), sep = "\t", header = T)
@@ -65,8 +71,17 @@ link_particles <- function(to.data, particle.data.folder, trajectory.data.folder
         cmd <- paste0("java -Xmx", memory_per_linkerProcess, "m -Dparticle.linkrange=", linkrange, " -Dparticle.displacement=", disp, 
                       " -jar ", " \"", to.particlelinker, "/ParticleLinker.jar","\" ", "'", dir, "'", " \"", traj_out.dir,"/ParticleLinker_", 
                       all.files[j],"\"")
-        # excure command and do not wait for process to end
-        system(paste0(cmd, " \\&"), wait =F)
+        
+        # execute command, do not wait for process to end
+        system(paste0(cmd," & echo $! >",to.data,"tmp_pid.txt"), wait=F)
+        # wait 1 sec for writing process etc
+        Sys.sleep(1)
+        # save PID
+        pid_cnt <- pid_cnt + 1
+        all_pids[pid_cnt] <- as.numeric(read.table(file=paste0(to.data,"tmp_pid.txt"), header=F))
+        # remove temporary pid file
+        system(paste0("rm ",to.data,"tmp_pid.txt"))
+        
       }
       
       if (.Platform$OS.type == "windows") {
@@ -94,8 +109,16 @@ link_particles <- function(to.data, particle.data.folder, trajectory.data.folder
     
     # wait before continuing with loop until less linker processes run than maximally allowed
     repeat{
+
+      #check which linker processes are still running
+      running_pids <- is.element(all_pids,as.numeric(system("pgrep java", intern=T)))
+      
+      # update list
+      all_pids <- all_pids[which(running_pids == T)]
+      pid_cnt <- length(all_pids)
+      
       # count running linker processes: I am actually counting java processes
-      act_linker_processes <- length(system("ps -A | grep java", intern = T))
+      act_linker_processes <- pid_cnt
       
       # end repeat loop if less linker processes run than allowed
       if(act_linker_processes < max_linker_processes){
@@ -111,8 +134,16 @@ link_particles <- function(to.data, particle.data.folder, trajectory.data.folder
   
   # before continuing: wait until last/ slowest file has been linked!
   repeat{
+
+    #check which linker processes are still running
+    running_pids <- is.element(all_pids,as.numeric(system("pgrep java", intern=T)))
+    
+    # update list
+    all_pids <- all_pids[which(running_pids == T)]
+    pid_cnt <- length(all_pids)
+    
     # count running linker processes: I am actually counting java processes
-    act_linker_processes <- length(system("ps -A | grep java", intern = T))
+    act_linker_processes <- pid_cnt
     
     # end repeat loop if no linker processes are running anymore
     if(act_linker_processes == 0){
