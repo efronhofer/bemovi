@@ -48,12 +48,12 @@ create_overlays <- function(traj.data, to.data, merged.data.folder, raw.video.fo
         print <- subset(traj.data_tmp, traj.data_tmp$frame <= j, select = c("X", "Y", "trajectory"))
         
         ## plot the particle(s) so long as there are some
-        if (length(print[, 1]) != 0) {
+        if (length(print[, X]) != 0) {
           plot(print$X, print$Y, xlim = c(0, as.numeric(width)), ylim = c(as.numeric(height), 0), col = "blue", pch = 15, cex = 1, asp = 1)
         }
         
         ## otherwise just plot the empty frame
-        if (length(print[, 1]) == 0) {
+        if (length(print[, X]) == 0) {
           plot(NA, NA, xlim = c(0, as.numeric(width)), ylim = c(as.numeric(height), 0), col = "blue", pch = 1, cex = 6, asp = 1)
         }
         }
@@ -63,12 +63,12 @@ create_overlays <- function(traj.data, to.data, merged.data.folder, raw.video.fo
           print <- subset(traj.data_tmp,traj.data_tmp$frame <= j, select=c("X","Y","trajectory","predict_spec"))
           
           ## plot the particle(s) so long as there are some
-          if (length(print[, 1]) != 0) {
+          if (length(print[, X]) != 0) {
             plot(print$X, print$Y, xlim=c(0, as.numeric(width)), ylim=c(as.numeric(height), 0),  col=as.factor(print$predict_spec), pch=15, cex=1, asp=1)
           }
           
           ## otherwise just plot the empty frame
-          if (length(print[, 1]) == 0) {
+          if (length(print[, X]) == 0) {
             plot(NA, NA, xlim = c(0, as.numeric(width)), ylim = c(as.numeric(height), 0), col = "blue", pch = 1, cex = 1, asp = 1)
           }
         }
@@ -89,13 +89,13 @@ create_overlays <- function(traj.data, to.data, merged.data.folder, raw.video.fo
         print <- subset(traj.data_tmp, traj.data_tmp$frame == j, select = c("X", "Y", "trajectory"))
         
         ## plot the particle(s) so long as there are some
-        if (length(print[, trajectory, ]) != 0) {
+        if (length(print[, X, ]) != 0) {
           plot(print$X, print$Y, xlim = c(0, as.numeric(width)), ylim = c(as.numeric(height), 0), col = "blue", pch = 1, cex = 6, asp = 1)
           text(print$X, print$Y - 20, print$trajectory, cex = 2, col = "red")
         }
         
         ## otherwise just plot the empty frame
-        if (length(print[, trajectory,]) == 0) {
+        if (length(print[, X,]) == 0) {
           plot(NA, NA, xlim = c(0, as.numeric(width)), ylim = c(as.numeric(height), 0), col = "blue", pch = 1, cex = 6, asp = 1)
         }
         }
@@ -105,13 +105,13 @@ create_overlays <- function(traj.data, to.data, merged.data.folder, raw.video.fo
           print <- subset(traj.data_tmp,traj.data_tmp$frame == j, select=c("X","Y","trajectory","predict_spec"))
                     
           ## plot the particle(s) so long as there are some
-          if (length(print[, trajectory, ]) != 0) {
+          if (length(print[, X, ]) != 0) {
             plot(print$X, print$Y, xlim=c(0,as.numeric(width)), ylim=c(as.numeric(height), 0), col=as.factor(print$predict_spec), pch=1, cex=6, asp=1)
             text(print$X, print$Y-20,print$trajectory,cex=2,col=as.numeric(print$predict_spec))
             }
           
           ## otherwise just plot the empty frame
-          if (length(print[, trajectory, ]) == 0) {
+          if (length(print[, X, ]) == 0) {
             plot(NA, NA, xlim = c(0, as.numeric(width)), ylim = c(as.numeric(height), 0), col = "blue", pch = 1, 
                  cex = 6, asp = 1)
           }
