@@ -57,7 +57,7 @@ link_particles <- function(to.data, particle.data.folder, trajectory.data.folder
     ## particle was found in one frame
     if (length(PA_data[, 1]) > 0) {
       
-      dir <- paste0(to.data, gsub(".cxd", "", sub(".ijout.txt", "", all.files[j])))
+      dir <- paste0(to.data, gsub(".avi", "", sub(".ijout.txt", "", all.files[j])))
       dir.create(dir)
       
       for (i in 1:max(PA_data$Slice)) {
@@ -167,7 +167,7 @@ link_particles <- function(to.data, particle.data.folder, trajectory.data.folder
   calculate_mvt(data,to.data,trajectory.data.folder,pixel_to_scale,fps)
   
   # delete working directories
-  unlink(paste0(to.data, gsub(".cxd", "", sub(".ijout.txt", "", all.files))), recursive = T)
+  unlink(paste0(to.data, gsub(".avi", "", sub(".ijout.txt", "", all.files))), recursive = T)
   
   #create a counter for the potential errors
   error.count <- 0
