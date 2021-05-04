@@ -22,10 +22,12 @@
 #' @export
 
 link_particles <- function(to.data, particle.data.folder, trajectory.data.folder, linkrange = 1, disp = 10, start_vid = 1, memory = 512, memory_per_linkerProcess = 512) {
-
+  
   #Slice<-to.particlelinker<-java.path<-pixel_to_scale<-fps<-NULL
   
   if(!exists("to.particlelinker")) stop("Path to ParticleLinker not found. Please specify path in global options.")
+  
+  if(memory_per_linkerProcess>memory) stop("Machine memory needs to be larger than the memory per linker process.")
   
   PA_output_dir <- paste0(to.data, particle.data.folder)
   traj_out.dir <- paste0(to.data, trajectory.data.folder)
@@ -43,6 +45,9 @@ link_particles <- function(to.data, particle.data.folder, trajectory.data.folder
   
   # counter variable for pids
   pid_cnt <- 0
+  
+  # Create folder for logs
+  dir.create("linkingLogs/")
   
   for (j in start_vid:length(all.files)) {
     
@@ -70,7 +75,7 @@ link_particles <- function(to.data, particle.data.folder, trajectory.data.folder
       if (.Platform$OS.type == "unix") {
         cmd <- paste0("java -Xmx", memory_per_linkerProcess, "m -Dparticle.linkrange=", linkrange, " -Dparticle.displacement=", disp, 
                       " -jar ", " \"", to.particlelinker, "/ParticleLinker.jar","\" ", "'", dir, "'", " \"", traj_out.dir,"/ParticleLinker_", 
-                      all.files[j],"\"")
+                      all.files[j],"\"", " 2>&1 | tee ",to.data, "linkingLogs/log", j, ".txt")
         
         # execute command, do not wait for process to end
         system(paste0(cmd," & echo $! >",to.data,"tmp_pid.txt"), wait=F)
@@ -88,18 +93,18 @@ link_particles <- function(to.data, particle.data.folder, trajectory.data.folder
         
         if(!exists("java.path")) stop("Java path not found. Please specify path in global options.")
         
-      # previously hardcoded as "C:/Progra~2/java/jre7/bin/javaw.exe"
-       cmd <- paste0(java.path, " -Xmx", memory,"m -Dparticle.linkrange=", linkrange, " -Dparticle.displacement=", disp," -jar",
+        # previously hardcoded as "C:/Progra~2/java/jre7/bin/javaw.exe"
+        cmd <- paste0(java.path, " -Xmx", memory,"m -Dparticle.linkrange=", linkrange, " -Dparticle.displacement=", disp," -jar",
                       gsub("/","\\\\", paste0(" \"" ,to.particlelinker,"/ParticleLinker.jar")),"\" ",
                       gsub("/","\\\\", paste0(" ","\"" ,dir,"\"")),
                       gsub("/","\\\\", paste0(" ","\"", traj_out.dir, "/ParticleLinker_", all.files[j], "\"")))
-       
-      system(cmd)
+        
+        system(cmd)
       }
       
       #delete working dir
       #unlink(dir, recursive = TRUE)
-                
+      
     }
     
     if (length(PA_data[, 1]) == 0) {
@@ -109,7 +114,7 @@ link_particles <- function(to.data, particle.data.folder, trajectory.data.folder
     
     # wait before continuing with loop until less linker processes run than maximally allowed
     repeat{
-
+      
       #check which linker processes are still running
       running_pids <- is.element(all_pids,as.numeric(system("pgrep java", intern=T)))
       
@@ -134,7 +139,7 @@ link_particles <- function(to.data, particle.data.folder, trajectory.data.folder
   
   # before continuing: wait until last/ slowest file has been linked!
   repeat{
-
+    
     #check which linker processes are still running
     running_pids <- is.element(all_pids,as.numeric(system("pgrep java", intern=T)))
     
@@ -163,4 +168,24 @@ link_particles <- function(to.data, particle.data.folder, trajectory.data.folder
   
   # delete working directories
   unlink(paste0(to.data, gsub(".cxd", "", sub(".ijout.txt", "", all.files))), recursive = T)
+  
+  #create a counter for the potential errors
+  error.count <- 0
+  
+  #Check if there may have been memory issue
+  if (.Platform$OS.type=="unix"){
+    #Get a list of all logs
+    logs <- list.files(path = "linkingLogs/", full.names = T)
+    
+    #Count the errors
+    for (j in logs){
+      error.count <- error.count + length(grep("java.lang.OutOfMemoryError", readLines(j, warn = F), value = TRUE))
+    }
+    system(paste0("rm -r ", to.data, "linkingLogs"))
+    
+    if(error.count>0){
+      messageError <- paste("Java ran out of memory while linking", error.count, "video(s). Try increasing the assigned memory per linking process")
+      stop(messageError)
+    }
+  }
 }
