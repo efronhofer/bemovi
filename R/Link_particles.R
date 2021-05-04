@@ -175,7 +175,7 @@ link_particles <- function(to.data, particle.data.folder, trajectory.data.folder
   #Check if there may have been memory issue
   if (.Platform$OS.type=="unix"){
     #Get a list of all logs
-    logs <- list.files(path = "linkingLogs/", full.names = T)
+    logs <- list.files(path = "linkingLogs", full.names = T)
     
     #Count the errors
     for (j in logs){
