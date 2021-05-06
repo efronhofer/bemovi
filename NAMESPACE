@@ -3,6 +3,7 @@
 export(calculate_mvt)
 export(check_threshold_values)
 export(check_video_file_names)
+export(create.subtitle.overlays)
 export(create_overlays)
 export(filter_data)
 export(link_particles)
