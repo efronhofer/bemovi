@@ -27,28 +27,28 @@ summarize_populations <- function(traj.data, sum.data, write=FALSE, to.data, mer
   pop_output <- read.table(paste(to.data, video.description.folder, video.description.file, sep = ""), sep = "\t", header = TRUE)
   
   # now add the population densities
-  pop_count_table <- tapply(traj.data$Major,list(as.factor(traj.data$file),as.factor(traj.data$frame)),length)
+  pop_count_table <- tapply(sum.data$N_frames, sum.data$file, sum)/total_frames
   
-  help_cnt_rep <- which(is.element(pop_output$file,dimnames(as.matrix(rowMeans(pop_count_table)))[[1]]))
+  help_reorder <- match(pop_output$file, names(tapply(sum.data$N_frames, sum.data$file, sum)/total_frames))
   
   pop_output$indiv_per_frame <- 0
-  pop_output$indiv_per_frame[help_cnt_rep] <- as.numeric(apply(pop_count_table,1,sum,na.rm=T))/total_frames
-
+  pop_output$indiv_per_frame <- pop_count_table[help_reorder]
+  
   pop_output$indiv_per_volume <- 0
-  pop_output$indiv_per_volume[help_cnt_rep] <- as.numeric(apply(pop_count_table,1,sum,na.rm=T))/total_frames /measured_volume
+  pop_output$indiv_per_volume <- pop_output$indiv_per_frame/measured_volume
   
   # add the mean of total area per frame (bioarea by frame)
   pop_count_table2 <- tapply(traj.data$Area,list(as.factor(traj.data$file),as.factor(traj.data$frame)),sum)
-  help_cnt_rep <- which(is.element(pop_output$file,dimnames(as.matrix(rowMeans(pop_count_table2)))[[1]]))
+  help_reorder <- match(pop_output$file, names(apply(pop_count_table2,1,sum,na.rm=T)))
   pop_output$bioarea_per_frame <- 0
-  pop_output$bioarea_per_frame[help_cnt_rep] <- as.numeric(apply(pop_count_table2,1,sum,na.rm=T))/total_frames 
+  pop_output$bioarea_per_frame <- as.numeric(apply(pop_count_table2,1,sum,na.rm=T)[help_reorder])/total_frames 
   
   # add the mean of total area per volume (bioarea by volume; by Isabelle Gounand)
   pop_output$bioarea_per_volume <- 0
-  pop_output$bioarea_per_volume[help_cnt_rep] <- as.numeric(apply(pop_count_table2,1,sum,na.rm=T))/total_frames/measured_volume
+  pop_output$bioarea_per_volume <- pop_output$bioarea_per_frame/measured_volume
   
   # first get file from id
-  sum.data$file <- sub("-.*$", "", sum.data$id )
+  help_reorder <- match(pop_output$file, names(tapply(sum.data$mean_major,sum.data$file,mean,na.rm=T)))
   
   # get morphology
   pop_output$major_mean <- NA
@@ -56,10 +56,10 @@ summarize_populations <- function(traj.data, sum.data, write=FALSE, to.data, mer
   pop_output$minor_mean <- NA
   pop_output$minor_sd <- NA
   
-  pop_output$major_mean[help_cnt_rep] <- as.numeric(tapply(sum.data$mean_major,sum.data$file,mean,na.rm=T))
-  pop_output$major_sd[help_cnt_rep] <- as.numeric(tapply(sum.data$mean_major,sum.data$file,sd,na.rm=T))
-  pop_output$minor_mean[help_cnt_rep] <- as.numeric(tapply(sum.data$mean_minor,sum.data$file,mean,na.rm=T))
-  pop_output$minor_sd[help_cnt_rep] <- as.numeric(tapply(sum.data$mean_minor,sum.data$file,sd,na.rm=T))
+  pop_output$major_mean <- as.numeric(tapply(sum.data$mean_major,sum.data$file,mean,na.rm=T)[help_reorder])
+  pop_output$major_sd <- as.numeric(tapply(sum.data$mean_major,sum.data$file,sd,na.rm=T)[help_reorder])
+  pop_output$minor_mean <- as.numeric(tapply(sum.data$mean_minor,sum.data$file,mean,na.rm=T)[help_reorder])
+  pop_output$minor_sd <- as.numeric(tapply(sum.data$mean_minor,sum.data$file,sd,na.rm=T)[help_reorder])
   
   # calculate gross speed
   sum.data$gross_speed <- sum.data$gross_disp/sum.data$duration 
@@ -74,14 +74,13 @@ summarize_populations <- function(traj.data, sum.data, write=FALSE, to.data, mer
   # mean gross speed is not returned yet --> calc here
   sum.data$gross_speed <- sum.data$gross_disp/sum.data$duration
   
-  pop_output$gross_speed_mean[help_cnt_rep] <- as.numeric(tapply(sum.data$gross_speed,sum.data$file,mean,na.rm=T))
-  pop_output$gross_speed_sd[help_cnt_rep] <- as.numeric(tapply(sum.data$gross_speed,sum.data$file,sd,na.rm=T))
+  pop_output$gross_speed_mean <- as.numeric(tapply(sum.data$gross_speed,sum.data$file,mean,na.rm=T)[help_reorder])
+  pop_output$gross_speed_sd <- as.numeric(tapply(sum.data$gross_speed,sum.data$file,sd,na.rm=T)[help_reorder])
   
-  pop_output$net_speed_mean[help_cnt_rep] <- as.numeric(tapply(sum.data$net_speed,sum.data$file,mean,na.rm=T))
-  pop_output$net_speed_sd[help_cnt_rep] <- as.numeric(tapply(sum.data$net_speed,sum.data$file,sd,na.rm=T))
+  pop_output$net_speed_mean <- as.numeric(tapply(sum.data$net_speed,sum.data$file,mean,na.rm=T)[help_reorder])
+  pop_output$net_speed_sd <- as.numeric(tapply(sum.data$net_speed,sum.data$file,sd,na.rm=T)[help_reorder])
   
-  pop_output$sd_turning_mean[help_cnt_rep] <- as.numeric(tapply(sum.data$sd_turning,sum.data$file,mean,na.rm=T))
-  
+  pop_output$sd_turning_mean <- as.numeric(tapply(sum.data$sd_turning,sum.data$file,mean,na.rm=T)[help_reorder])
   
   #output population summary data
   if (write==TRUE){save(pop_output, file = paste0(to.data, merged.data.folder,"Population_Data.RData"))}
