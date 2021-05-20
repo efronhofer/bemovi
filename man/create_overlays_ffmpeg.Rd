@@ -13,7 +13,8 @@ create_overlays_ffmpeg(
   fps,
   vid.length,
   width,
-  height
+  height,
+  overlay.type = "both"
 )
 }
 \arguments{
