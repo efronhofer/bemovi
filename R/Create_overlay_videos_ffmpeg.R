@@ -14,7 +14,12 @@
 #' @return returns nothing (NULL)
 #' @export 
 
-create_overlays_ffmpeg <- function(to.data, traj.data, raw.avi.folder, temp.overlay.folder, overlay.folder, fps, vid.length, width, height){
+create_overlays_ffmpeg <- function(to.data, traj.data, raw.avi.folder, temp.overlay.folder, overlay.folder, fps, vid.length, width, height, overlay.type="both"){
+
+  #Check if overlay type is valid 
+  if(! overlay.type %in% c("circle", "number", "both")){
+    stop("Wrong overlay type specified. Please choose 'circle', 'number', or 'both'")
+  }
 
   #Define folder to store the temporary subtitles
   temp.overlays <- paste0(to.data, temp.overlay.folder)
@@ -25,16 +30,32 @@ create_overlays_ffmpeg <- function(to.data, traj.data, raw.avi.folder, temp.over
   traj.data$endtime <- traj.data$starttime + (1/fps)
   traj.data$ID.vid <- traj.data$trajectory
   #Generate a subtitle line for each observation
-  traj.data$subtitle <- paste0("Dialogue: 0,0:00:", sprintf("%05.2f", traj.data$starttime), ",0:00:", sprintf("%05.2f", traj.data$endtime), ",DefaultVCD,,0000,0000,0000,,{\\pos(",
+  traj.data$subtitle <- paste0("Dialogue: 2,0:00:", sprintf("%05.2f", traj.data$starttime), ",0:00:", sprintf("%05.2f", traj.data$endtime), ",Numbers,,0000,0000,0000,,{\\pos(", 
                                abs(round(traj.data$X)), ", ",abs(round(traj.data$Y)),")}", traj.data$ID.vid)
+  traj.data$subtitle2 <- paste0("Dialogue: 1,0:00:", sprintf("%05.2f", traj.data$starttime), ",0:00:", sprintf("%05.2f", traj.data$endtime), ",Circle,,0000,0000,0000,,{\\pos(", 
+                                abs(round(traj.data$X)), ", ",ifelse(abs(round(traj.data$Y))<height, abs(round(traj.data$Y))+40, abs(round(traj.data$Y))),")}", "O")
+  
   #Generate the header for the subtitle file
-  header <- c("[Script Info]", "ScriptType: v4.00+", "Collisions: Normal", paste0("PlayResX: ", width), paste0("PlayResY: ", height),
-              paste0("Timer: ", vid.length), "\r", "[V4+ Styles]", "Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding \rStyle: DefaultVCD,Arial,24,65535,65535,65535,65535,-1,0,0,0,100,100,0,0.00,1,1,0,2,0,0,0,0", "\r", "[Events]Format: Layer, Start, End, Style, Actor, MarginL, MarginR, MarginV, Effect, Text")
-  #Make the folder to store the subtitle files, and generate the subtitle file for each file with observed cells
+  header <- c("[Script Info]", "ScriptType: v4.00+", "Collisions: Normal", paste0("PlayResX: ", width), paste0("PlayResY: ", height), 
+              paste0("Timer: ", vid.length), "\r", "[V4+ Styles]", "Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding \rStyle: Numbers,Arial,24,65535,65535,65535,65535,0,0,0,0,100,100,0,0.00,1,1,0,2,0,0,0,0", "\r", "Style: Circle,Arial,80,&H0000FF,&H0000FF,&H0000FF,&H0000FF,-1,0,0,0,100,100,0,0.00,1,1,0,2,0,0,0,0", "\r", "[Events]Format: Layer, Start, End, Style, Actor, MarginL, MarginR, MarginV, Effect, Text")
+  
+  #Make the folder to store the subtitle files, and generate the subtitle file for each file with observed cells 
   dir.create(paste0(temp.overlays), showWarnings = F)
   for (i in unique(traj.data$file)){
-    lines <- append(header, unlist(traj.data[which(traj.data$file==i), "subtitle"]))
-    data.table::fwrite(list(lines), file = paste0(temp.overlays, "/", i, ".ssa"), quote = F)
+    if(overlay.type=="circle")
+    {
+      lines <- append(header, unlist(traj.data[which(traj.data$file==i), "subtitle2"]))
+      data.table::fwrite(list(lines), file = paste0(temp.overlays, "/", i, ".ssa"), quote = F) 
+    } else if(overlay.type=="number")
+    {
+      lines <- append(header, unlist(traj.data[which(traj.data$file==i), "subtitle"]))
+      data.table::fwrite(list(lines), file = paste0(temp.overlays, "/", i, ".ssa"), quote = F) 
+    }else if(overlay.type=="both")
+    {
+      lines <- append(header, unlist(traj.data[which(traj.data$file==i), "subtitle"]))
+      lines <- append(lines, unlist(traj.data[which(traj.data$file==i), "subtitle2"]))
+      data.table::fwrite(list(lines), file = paste0(temp.overlays, "/", i, ".ssa"), quote = F) 
+    }
   }
   #Get a list of the subtitle files and the .avi files
   avi.files <- list.files(input.avi.folder, pattern = "\\.avi", full.names = T)
