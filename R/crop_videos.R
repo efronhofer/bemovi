@@ -13,6 +13,8 @@
 crop_videos <- function(to.data, particle.data.folder, max.weight, coordinates.threshold, width, height) {
   #converting MB to bytes
   max.weight <- max.weight / 0.000001
+  # go to particale.data.folder
+  setwd(particle.data.folder)
   #creating a dataframe with files name and files sizes whithin the directory
   sizes <-system("echo  \"File_Name\tSize\" && ls -l | awk '{print $9, $5}' ",intern=TRUE)
   file_summary <- read.table(text = sizes,header=TRUE)
@@ -107,4 +109,6 @@ crop_videos <- function(to.data, particle.data.folder, max.weight, coordinates.t
       return(FALSE)
     }
   }
+  setwd(to.data)
+  return(NULL)
 }
