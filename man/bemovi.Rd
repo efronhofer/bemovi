@@ -2,6 +2,7 @@
 % Please edit documentation in R/bemovi.R
 \docType{package}
 \name{bemovi}
+\alias{bemovi-package}
 \alias{bemovi}
 \title{Bemovi, software for extracting BEhaviour and MOrphology from VIdeos.}
 \description{
