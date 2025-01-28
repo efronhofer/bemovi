@@ -1,23 +1,16 @@
-################################################################################
-# CREATION A GLOBAL FUNCTION TO CROP VIDEOS THAT NEED TO BE CROPPED
-#
-# code by Fanny Gonguet (Jan 2025)
-#
-#Function to reduce the time of analyses for too heavy documents by cropping 
-#particles coordinates. Only them whithin the cropped frame will continue the analyse.
+#' Function to CROP VIDEOS THAT NEED TO BE CROPPED (by Fanny Gonguet)
+#' 
+#' Function to reduce the time of analyses for too heavy documents by cropping particles coordinates. Only them whithin the cropped frame will continue the analyse.
+#' @param to.data path to the working directory
+#' @param particle.data.folder directory in which text file data describing particules morphology and coordiantes are stored
+#' @param max.weight variable to set as weight from wich text file data should be cropped (Mb)
+#' @param coordinates.threshold variable to set as the minimum coordinates from wich to crop the particles coordinates (pixels)
+#' @param width width in pixels of the original videos
+#' @param height height in pixels of the original video
+#' @return returns nothing (NULL)
+#' @export
 
-#Arguments
-#to.data, particle.data.folder, max.weight, frame.resolution,  coordinates.threshold
-
-#to.data path to the working directory
-#particle.data.folder directory in which text file data describing particules morphology and coordiantes are stored
-#max.weight variable to set as weight from wich text file data should be cropped (Mb)
-#frame.resolution the resolution of each frames used to produce videos and thus text files
-#coordinates.threshold variable to set as the minimum coordinates from wich to crop the particles coordinates (pixels)
-
-
-crop_videos <- function(    to.data, particle.data.folder, 
-    max.weight, coordinates.threshold,    frame.resolution) {
+crop_videos <- function(to.data, particle.data.folder, max.weight, coordinates.threshold, width, height) {
   #converting MB to bytes
   max.weight <- max.weight / 0.000001
   #creating a dataframe with files name and files sizes whithin the directory
@@ -61,14 +54,14 @@ crop_videos <- function(    to.data, particle.data.folder,
   ##############################################################################
   #create a function to crop analysed particules within a certain frame
   
-  #frame.resolution the resolution of each frames used to produce videos and thus text files
+  #width and height and the resolution of each frames used to produce videos and thus text files
   #coordinates.threshold variable to set as the minimum coordinates from wich to crop the particles coordinates (pixels)
-  crop_function <- function (dataset, coordinates.threshold, frame.resolution) {
+  crop_function <- function (dataset, coordinates.threshold, width, height) {
     #defining the crop coordinates (according to coordinates.threshold)
     Xmin <- coordinates.threshold
-    Xmax <- frame.resolution - coordinates.threshold
+    Xmax <- width - coordinates.threshold
     Ymin <- coordinates.threshold
-    Ymax <- frame.resolution - coordinates.threshold
+    Ymax <- height - coordinates.threshold
     #initializing an empty dataframe to store the "cropped dataset"
     subset_dataset <- data.frame()
     #cropping the dataset an put it into the new dataset "subset_dataset"
@@ -98,7 +91,7 @@ crop_videos <- function(    to.data, particle.data.folder,
     # Reading the current file into a data frame
     current_dataset <- all_data[[i]]
     # Applying the crop_function on the current_dataset
-    cropped_dataset <- crop_function(current_dataset, coordinates.threshold, frame.resolution)
+    cropped_dataset <- crop_function(current_dataset, coordinates.threshold, width, height)
     #storing it in the "result" vector
     results[[i]] <- cropped_dataset
     #saving the cropped_dataset
@@ -108,6 +101,7 @@ crop_videos <- function(    to.data, particle.data.folder,
     #Checking if the file was saved successfully
     if (file.exists(save_dir)) {
       print(paste(save_dir, "saved successfully"))
+      return(NULL)
     } else {
       warning(paste("Failed saving", save_dir))
       return(FALSE)
