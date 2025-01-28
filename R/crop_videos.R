@@ -17,7 +17,7 @@ crop_videos <- function(to.data, particle.data.folder, max.weight, coordinates.t
   sizes <-system("echo  \"File_Name\tSize\" && ls -l | awk '{print $9, $5}' ",intern=TRUE)
   file_summary <- read.table(text = sizes,header=TRUE)
   #keeping only .txt files
-  library(dplyr)
+  #library(dplyr)
   particle_file_summary <- subset(file_summary, grepl(".txt", File_Name))
 
   ##############################################################################
