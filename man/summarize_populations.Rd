@@ -12,7 +12,10 @@ summarize_populations(
   merged.data.folder,
   video.description.folder,
   video.description.file,
-  total_frames
+  total_frames,
+  coordinates.threshold,
+  width,
+  height
 )
 }
 \arguments{
