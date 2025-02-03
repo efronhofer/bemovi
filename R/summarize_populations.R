@@ -16,7 +16,7 @@
 #' @examples
 #' summarize_populations()
 
-summarize_populations <- function(traj.data, sum.data, write=FALSE, to.data, merged.data.folder, video.description.folder, video.description.file, total_frames){
+summarize_populations <- function(traj.data, sum.data, write=FALSE, to.data, merged.data.folder, video.description.folder, video.description.file, total_frames, coordinates.threshold, width, height){
   
   # checks whether frames per second are specified
   if(!exists("fps") ) stop("frames per second not specified (fps)")
@@ -25,6 +25,10 @@ summarize_populations <- function(traj.data, sum.data, write=FALSE, to.data, mer
   
   # results object from video description file
   pop_output <- read.table(paste(to.data, video.description.folder, video.description.file, sep = ""), sep = "\t", header = TRUE)
+  cropped_files <- read.table(paste(to.data, particle.data.folder, "cropped_files.txt",sep= ""),sep = "\t", header = TRUE)
+  library(dplyr)
+  pop_output <- pop_output  %>%
+    left_join(cropped_files, by = "file")
   
   # now add the population densities
   pop_count_table <- tapply(sum.data$N_frames, sum.data$file, sum)/total_frames
@@ -32,16 +36,46 @@ summarize_populations <- function(traj.data, sum.data, write=FALSE, to.data, mer
   help_reorder <- match(pop_output$file, names(tapply(sum.data$N_frames, sum.data$file, sum)/total_frames))
   
   pop_output$indiv_per_frame <- 0
-  pop_output$indiv_per_frame <- pop_count_table[help_reorder]
+  
+  ##############################################################################
+  #if the frame has been cropped, densities calculated are within the cropped frame area
+  #here we infer densities of the global frame area from the one calculated from
+  #the cropped one
+  
+  # calculating area of the global frame
+  total_frame_area <- width*height
+  
+  # calculating area of the cropped frame
+  # removing "coordinates threshold" from both sides of the global frame
+  cropped_frame_area <- (width - (2*coordinates.threshold)) * (height - (2*coordinates.threshold))
+  
+  #calcul of densities when frame has been cropped
+  pop_count_table_cropped <- pop_count_table * (total_frame_area/cropped_frame_area)
+  
+  #different results if or if not cropped frames
+  pop_output$indiv_per_frame <- ifelse(
+    pop_output$Cropped == "yes",
+    pop_count_table_cropped[help_reorder], #if the frame has been cropped, new calculus
+    pop_count_table[help_reorder]#otherwise, densities not recalculated
+  )
   
   pop_output$indiv_per_volume <- 0
   pop_output$indiv_per_volume <- pop_output$indiv_per_frame/measured_volume
   
+  ##############################################################################
+  #if the frame has been cropped, bioareas calculated are within the cropped frame area
+  #here we infer bioareas of the global frame area from the one calculated from
+  #the cropped one
+  #same method as before for densities
   # add the mean of total area per frame (bioarea by frame)
   pop_count_table2 <- tapply(traj.data$Area,list(as.factor(traj.data$file),as.factor(traj.data$frame)),sum)
   help_reorder <- match(pop_output$file, names(apply(pop_count_table2,1,sum,na.rm=T)))
   pop_output$bioarea_per_frame <- 0
-  pop_output$bioarea_per_frame <- as.numeric(apply(pop_count_table2,1,sum,na.rm=T)[help_reorder])/total_frames 
+  pop_output$bioarea_per_frame <- ifelse(
+    pop_output$Cropped == "yes",
+    as.numeric(apply(pop_count_table2,1,sum,na.rm=T)/total_frames)* (total_frame_area/cropped_frame_area),
+    as.numeric(apply(pop_count_table2,1,sum,na.rm=T)[help_reorder])/total_frames
+  )
   
   # add the mean of total area per volume (bioarea by volume; by Isabelle Gounand)
   pop_output$bioarea_per_volume <- 0
