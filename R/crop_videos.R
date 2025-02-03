@@ -14,9 +14,17 @@ crop_videos <- function(to.data, particle.data.folder, max.weight, coordinates.t
   #converting MB to bytes
   max.weight <- max.weight / 0.000001
   # go to particale.data.folder
-  setwd(particle.data.folder)
+  #setwd(particle.data.folder)
   #creating a dataframe with files name and files sizes whithin the directory
-  sizes <-system("echo  \"File_Name\tSize\" && ls -l | awk '{print $9, $5}' ",intern=TRUE)
+  # Specify the target directory
+  target_directory <- paste0(to.data,particle.data.folder)
+  # Get file sizes and names
+  sizes <- system(paste0(
+    "echo \"File_Name\tSize\" && cd ", 
+    shQuote(target_directory), 
+    " && ls -l | awk '{print $9, $5}'"
+  ), intern = TRUE)
+  
   file_summary <- read.table(text = sizes,header=TRUE)
   #keeping only .txt files
   #library(dplyr)
@@ -40,9 +48,12 @@ crop_videos <- function(to.data, particle.data.folder, max.weight, coordinates.t
       
       #creating a dataframe with only the .txt files with a filesize > wax.weight
       particle_file_summary_filtered <<- particle_file_summary[particle_file_summary$Size > max.weight, ]
+      return(TRUE)
     } else{
       #saying user when filesize < max.weight
-      print(paste(filename, "size <  max.weight"))}}
+      print(paste(filename, "size <  max.weight"))
+      return(FALSE)}}
+  
   ##############################################################################
   
   #creating a vector for results (length of the vector is length of dataframe 
@@ -52,6 +63,15 @@ crop_videos <- function(to.data, particle.data.folder, max.weight, coordinates.t
   for (i in 1:nrow(particle_file_summary)) {
     results[i] <- copy_filter_function(particle_file_summary$Size[i], particle_file_summary$File_Name[i],max.weight)  # Apply the function using the values from each row
   }
+  
+  ################################################################################
+  # saving in a txt file, wich file is cropped or no
+  Cropped <- ifelse(results == 1, "yes", "no")
+  file_name <- particle_file_summary$File_Name
+  file <- sub("\\.ijout.txt$", "", file_name)
+  cropped_files <- data.frame(file,Cropped)
+  save_dir <- paste0(to.data, particle.data.folder, "/", "cropped_files.txt")
+  write.table(cropped_files, file = save_dir, sep = "\t", row.names = FALSE, quote = FALSE)
   
   ##############################################################################
   #create a function to crop analysed particules within a certain frame
@@ -80,7 +100,9 @@ crop_videos <- function(to.data, particle.data.folder, max.weight, coordinates.t
   #Loop through each file and read its content
   for (file in txt_files) {
     # Read the current .txt file
-    data <- read.table(file, header = TRUE)
+    file_path <- file.path(to.data, particle.data.folder, file)
+    data <- read.delim(file_path, header = TRUE)
+    colnames(data)[1]<- ""
     # Add the data to the list
     all_data[[file]] <- data
   }
@@ -103,12 +125,12 @@ crop_videos <- function(to.data, particle.data.folder, max.weight, coordinates.t
     #Checking if the file was saved successfully
     if (file.exists(save_dir)) {
       print(paste(save_dir, "saved successfully"))
-      return(NULL)
+      #return(NULL)
     } else {
       warning(paste("Failed saving", save_dir))
-      return(FALSE)
+      #return(FALSE)
     }
   }
-  setwd(to.data)
-  return(NULL)
+  #setwd(to.data)
+  #return(NULL)
 }
