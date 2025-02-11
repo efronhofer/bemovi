@@ -39,6 +39,7 @@ crop_videos <- function(to.data, particle.data.folder, max.weight, coordinates.t
   #filename argument referring to names of files
   #max.weight defining the maximal weight upon which particles coordinates are cropped
 
+
   
   copy_filter_function <- function(filesize,filename,max.weight){
     #loop applying if filesize > max.weight
@@ -50,7 +51,7 @@ crop_videos <- function(to.data, particle.data.folder, max.weight, coordinates.t
       particle_file_summary_filtered <<- particle_file_summary[particle_file_summary$Size > max.weight, ]
       
       #vector with files names from "particle_file_summary"
-	  txt_files <- particle_file_summary_filtered$File_Name
+	  txt_files <<- particle_file_summary_filtered$File_Name
   
       return(TRUE)
     } else{
@@ -98,15 +99,17 @@ crop_videos <- function(to.data, particle.data.folder, max.weight, coordinates.t
   
   #initializing a list to store the data from all .txt files
   all_data <- list()
-  #Loop through each file and read its content
-  for (file in txt_files) {
-    # Read the current .txt file
-    file_path <- file.path(to.data, particle.data.folder, file)
-    data <- read.delim(file_path, header = TRUE)
-    colnames(data)[1]<- ""
-    # Add the data to the list
-    all_data[[file]] <- data
-  }
+  if(exists("txt_files")){
+	#Loop through each file and read its content
+	for (file in txt_files) {
+		# Read the current .txt file
+		file_path <- file.path(to.data, particle.data.folder, file)
+		data <- read.delim(file_path, header = TRUE)
+		colnames(data)[1]<- ""
+		# Add the data to the list
+		all_data[[file]] <- data
+	}
+	
   
   #initializing a list to store results
   results <- vector("list",length(all_data))
@@ -132,6 +135,7 @@ crop_videos <- function(to.data, particle.data.folder, max.weight, coordinates.t
       #return(FALSE)
     }
   }
+}
   #setwd(to.data)
   #return(NULL)
 }
