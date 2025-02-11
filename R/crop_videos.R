@@ -48,6 +48,10 @@ crop_videos <- function(to.data, particle.data.folder, max.weight, coordinates.t
       
       #creating a dataframe with only the .txt files with a filesize > wax.weight
       particle_file_summary_filtered <<- particle_file_summary[particle_file_summary$Size > max.weight, ]
+      
+      #vector with files names from "particle_file_summary"
+	  txt_files <- particle_file_summary_filtered$File_Name
+  
       return(TRUE)
     } else{
       #saying user when filesize < max.weight
@@ -91,9 +95,6 @@ crop_videos <- function(to.data, particle.data.folder, max.weight, coordinates.t
   }
   ##############################################################################
   #applying the crop_function to each file of the "particle_file_summary"
-  
-  #vector with files names from "particle_file_summary"
-  txt_files <- particle_file_summary_filtered$File_Name
   
   #initializing a list to store the data from all .txt files
   all_data <- list()
